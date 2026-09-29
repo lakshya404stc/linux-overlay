@@ -13,6 +13,8 @@ const LEVELS = [0, 10, 20, 30, 40, 50, 60, 70];
 let overlays = [];
 let tray;
 let level = 40;
+let hideTimer = null; // set while temporarily hidden for a screenshot
+const HIDE_SECONDS = 10;
 
 // Electron's setIgnoreMouseEvents doesn't take effect under XWayland, so set an
 // empty X11 input shape directly.
@@ -62,12 +64,25 @@ function createOverlay(display) {
 
 function applyLevel() {
   level = Math.min(level, 70);
+  paint(hideTimer ? 0 : level);
+}
+
+function paint(pct) {
   for (const w of overlays) {
     if (w.isDestroyed()) continue;
     w.webContents
-      .executeJavaScript(`document.getElementById('d').style.background='rgba(0,0,0,${level / 100})'`)
+      .executeJavaScript(`document.getElementById('d').style.background='rgba(0,0,0,${pct / 100})'`)
       .catch(() => {});
   }
+}
+
+// Screenshots capture the overlay too, so go fully transparent for a few seconds.
+// (Opacity only: hiding/re-showing the window would reset click-through and stickiness.)
+function hideForScreenshot() {
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => { hideTimer = null; applyLevel(); buildMenu(); }, HIDE_SECONDS * 1000);
+  applyLevel();
+  buildMenu();
 }
 
 function buildMenu() {
@@ -78,8 +93,10 @@ function buildMenu() {
       label: `${l}%`,
       type: 'radio',
       checked: l === level,
-      click: () => { level = l; applyLevel(); buildMenu(); },
+      click: () => { clearTimeout(hideTimer); hideTimer = null; level = l; applyLevel(); buildMenu(); },
     })),
+    { type: 'separator' },
+    { label: hideTimer ? 'Hidden for screenshot…' : `Hide for screenshot (${HIDE_SECONDS}s)`, click: hideForScreenshot },
     { type: 'separator' },
     { label: 'Quit', click: () => app.exit(0) },
   ]));
