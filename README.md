@@ -13,18 +13,54 @@ npm install
 ./launch.sh
 ```
 
-## Add to the app launcher (Super key → "Dim")
+## Add it to the Windows (Super) key menu
+
+After this, press the **Windows key**, type **"Dim"** and press Enter to start it.
+
+1. Clone the repo and install dependencies (only needed once):
+
+   ```bash
+   git clone https://github.com/lakshya404stc/linux-overlay.git
+   cd linux-overlay
+   npm install
+   chmod +x launch.sh
+   ```
+
+2. From inside the `linux-overlay` folder, create the menu entry:
+
+   ```bash
+   cat > ~/.local/share/applications/dim-overlay.desktop <<EOD
+   [Desktop Entry]
+   Type=Application
+   Name=Dim Overlay
+   Comment=Dim screen below minimum brightness
+   Exec=$PWD/launch.sh
+   Icon=weather-clear-night
+   Terminal=false
+   Categories=Utility;
+   Keywords=dim;brightness;dark;overlay;
+   EOD
+   update-desktop-database ~/.local/share/applications
+   ```
+
+   `$PWD` fills in the folder's full path, so run it from inside the repo. If you move the folder later, run this step again.
+
+3. Press the Windows key and type **"Dim"**. If it doesn't show up, log out and back in once.
+   Optional: right-click it and choose **Pin to Dash**.
+
+**Using it:** click the moon icon in the top-right of the top bar to pick a dim level or choose **Quit**.
+
+**Start automatically at login (optional):**
 
 ```bash
-cat > ~/.local/share/applications/dim-overlay.desktop <<EOD
-[Desktop Entry]
-Type=Application
-Name=Dim Overlay
-Exec=$PWD/launch.sh
-Icon=weather-clear-night
-Terminal=false
-Categories=Utility;
-EOD
+mkdir -p ~/.config/autostart
+cp ~/.local/share/applications/dim-overlay.desktop ~/.config/autostart/
+```
+
+**Remove it from the menu:**
+
+```bash
+rm ~/.local/share/applications/dim-overlay.desktop ~/.config/autostart/dim-overlay.desktop
 ```
 
 ## Notes
